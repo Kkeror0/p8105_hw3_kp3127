@@ -90,6 +90,7 @@ mean_table <- instacart %>%
 mean_table
 ```
 
+# Problem 2 
 
 
 
