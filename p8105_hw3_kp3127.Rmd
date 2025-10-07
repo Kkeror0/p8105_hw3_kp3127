@@ -1,0 +1,13 @@
+---
+title: "p8105_hw3_kp3127"
+output: html_document
+date: "2025-10-07"
+---
+
+# Problem 1
+```{r}
+library(p8105.datasets)
+data("instacart")
+head(instacart)
+```
+
