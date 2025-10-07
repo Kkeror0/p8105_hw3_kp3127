@@ -359,35 +359,27 @@ display: none;
 <h1>Problem 1</h1>
 <pre class="r"><code>library(p8105.datasets)
 data(&quot;instacart&quot;)
-head(instacart)</code></pre>
-<pre><code>##   order_id product_id add_to_cart_order reordered user_id eval_set order_number
-## 1        1      49302                 1         1  112108    train            4
-## 2        1      11109                 2         1  112108    train            4
-## 3        1      10246                 3         0  112108    train            4
-## 4        1      49683                 4         0  112108    train            4
-## 5        1      43633                 5         1  112108    train            4
-## 6        1      13176                 6         0  112108    train            4
-##   order_dow order_hour_of_day days_since_prior_order
-## 1         4                10                      9
-## 2         4                10                      9
-## 3         4                10                      9
-## 4         4                10                      9
-## 5         4                10                      9
-## 6         4                10                      9
-##                                    product_name aisle_id department_id
-## 1                              Bulgarian Yogurt      120            16
-## 2 Organic 4% Milk Fat Whole Milk Cottage Cheese      108            16
-## 3                         Organic Celery Hearts       83             4
-## 4                                Cucumber Kirby       83             4
-## 5          Lightly Smoked Sardines in Olive Oil       95            15
-## 6                        Bag of Organic Bananas       24             4
-##                  aisle   department
-## 1               yogurt   dairy eggs
-## 2 other creams cheeses   dairy eggs
-## 3     fresh vegetables      produce
-## 4     fresh vegetables      produce
-## 5  canned meat seafood canned goods
-## 6         fresh fruits      produce</code></pre>
+dim(instacart)</code></pre>
+<pre><code>## [1] 1384617      15</code></pre>
+<pre class="r"><code>names(instacart)</code></pre>
+<pre><code>##  [1] &quot;order_id&quot;               &quot;product_id&quot;             &quot;add_to_cart_order&quot;     
+##  [4] &quot;reordered&quot;              &quot;user_id&quot;                &quot;eval_set&quot;              
+##  [7] &quot;order_number&quot;           &quot;order_dow&quot;              &quot;order_hour_of_day&quot;     
+## [10] &quot;days_since_prior_order&quot; &quot;product_name&quot;           &quot;aisle_id&quot;              
+## [13] &quot;department_id&quot;          &quot;aisle&quot;                  &quot;department&quot;</code></pre>
+<p>The Instacart dataset contains 1384617 observations and 15 variables.
+Each row corresponds to a single product purchased within an order, and
+variables describe both the product and ordering details. For instance,
+key variables include:</p>
+<p><code>order_id</code> (unique order identifier)</p>
+<p><code>product_name</code> (name of the purchased item)</p>
+<p><code>aisle and department</code> (location and product category)</p>
+<p><code>order_dow</code> and <code>order_hour_of_day</code> (day of
+week and time of day when order was placed)</p>
+<p>Example observations include items such as “Bulgarian Yogurt” from
+the “yogurt” aisle or “Organic Baby Spinach” from the “fresh vegetables”
+aisle. This dataset provides a rich source for exploring consumer
+purchasing patterns across different times, aisles, and departments.</p>
 </div>
 
 

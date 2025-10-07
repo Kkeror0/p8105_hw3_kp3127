@@ -8,6 +8,20 @@ date: "2025-10-07"
 ```{r}
 library(p8105.datasets)
 data("instacart")
-head(instacart)
+dim(instacart)
+names(instacart)
 ```
+The Instacart dataset contains `r nrow(instacart)` observations and `r ncol(instacart)` variables.
+Each row corresponds to a single product purchased within an order, and variables describe both the product and ordering details.
+For instance, key variables include:
 
+`order_id` (unique order identifier)
+
+`product_name` (name of the purchased item)
+
+`aisle and department` (location and product category)
+
+`order_dow` and `order_hour_of_day` (day of week and time of day when order was placed)
+
+Example observations include items such as “Bulgarian Yogurt” from the “yogurt” aisle or “Organic Baby Spinach” from the “fresh vegetables” aisle.
+This dataset provides a rich source for exploring consumer purchasing patterns across different times, aisles, and departments.
