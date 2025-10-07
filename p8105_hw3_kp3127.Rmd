@@ -65,7 +65,30 @@ instacart_sum |>
   ) +
   theme_minimal()
 ```
+```{r}
+popular_items = instacart %>%
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>%
+  group_by(aisle, product_name) %>%
+  summarise(n_orders = n()) %>%
+  arrange(aisle, desc(n_orders)) %>% 
+  filter(min_rank(desc(n_orders))<4)
+popular_items
+```
 
+```{r}
+mean_table <- instacart %>%
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
+  group_by(product_name, order_dow) %>% 
+  summarise(mean_hr=mean(order_hour_of_day, na.rm=TRUE)) %>% 
+  mutate(order_dow = recode(order_dow,
+                            `0` = "Sun", `1` = "Mon", `2` = "Tue", `3` = "Wed",
+                            `4` = "Thu", `5` = "Fri", `6` = "Sat")) %>% 
+  pivot_wider(
+    names_from = order_dow,
+    values_from = mean_hr
+  )
+mean_table
+```
 
 
 
