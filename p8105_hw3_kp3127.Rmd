@@ -184,6 +184,9 @@ ggplot(zori_zip_year,aes(x=zip,y=mean_rent))+
 # TBC
 
 # Problem 3
+```{r}
+
+```
 
 
 
