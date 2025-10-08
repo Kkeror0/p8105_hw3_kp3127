@@ -87,7 +87,10 @@ mean_table <- instacart %>%
     names_from = order_dow,
     values_from = mean_hr
   )
-mean_table
+knitr::kable(
+  mean_table,
+  caption = "the mean hour of the day of Pink Lady Apples and Coffee Ice Cream ;"
+)
 ```
 
 # Problem 2 
@@ -163,7 +166,10 @@ zori_table <- zori_final %>%
     names_from = year,
     values_from = mean_rent
   )
-zori_table
+knitr::kable(
+  zori_table,
+  caption = "the average rental price in each borough and year"
+)
 ```
 Average rents rose across all boroughs from 2015 to 2024.  
 Manhattan remained the most expensive, with a brief dip around 2020 followed by strong growth after 2022.  
@@ -185,8 +191,108 @@ ggplot(zori_zip_year,aes(x=zip,y=mean_rent))+
 
 # Problem 3
 ```{r}
-
+accel=read.csv("./nhanes_accel.csv") %>% 
+  janitor::clean_names()
+covar=read.csv("./nhanes_covar.csv",skip=4) %>% 
+  janitor::clean_names()
+nhanes_merged <-covar  %>%
+  left_join(accel, by = "seqn") %>% 
+  filter(age>=21) %>% 
+  drop_na(sex, age, bmi, education) %>% 
+  mutate(
+    sex = recode_factor(sex, "1" = "Male", "2" = "Female"),
+    education = recode_factor(
+      education,
+      "1" = "Less than high school",
+      "2" = "High school equivalent",
+      "3" = "More than high school",
+      .ordered = TRUE
+    )
+  )  
 ```
 
+```{r}
+edu_sex_table <- nhanes_merged %>% 
+  group_by(education,sex) %>% 
+  summarise(n_par=n()) %>% 
+  pivot_wider(
+    names_from = sex,
+    values_from = n_par
+  )
+knitr::kable(
+  edu_sex_table,
+  caption = "Number of men and women by education level"
+)
+```
 
+```{r}
+ggplot(nhanes_merged, aes(x = age, fill = sex)) +
+  geom_density(alpha = .5) +
+  facet_wrap(~ education, nrow = 1) +
+  labs(
+    title = "Age distribution by education level and sex",
+    x = "Age (years)",
+    y = "Density",
+    fill = "Sex"
+  ) +
+  theme_minimal()
+```
+```{r}
+total_mims <- nhanes_merged %>% 
+  mutate(
+    total_activity = rowSums(across(starts_with("min")), na.rm = TRUE)
+  ) %>%
+  distinct(seqn, age, sex, education, total_activity)  
+```
 
+```{r}
+ggplot(total_mims, aes(x = age, y = total_activity, color = sex)) +
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE, linewidth = 1) +
+  facet_wrap(~ education, nrow=1) +
+  labs(
+    title = "Total Daily Activity vs. Age by Sex and Education Level",
+    x = "Age (years)",
+    y = "Total MIMS Activity (sum over 24 hours)",
+    color = "Sex"
+  ) +
+  theme_minimal()
+```
+Total activity decreases with age across all education levels.  
+Differences by sex are modest, though younger women tend to have higher activity levels.  
+Participants with higher education appear to maintain activity more consistently through adulthood.  
+
+```{r}
+nhanes_timeline <- nhanes_merged %>% 
+  pivot_longer(
+    cols = starts_with("min"),
+    names_to = "minute",
+    values_to = "mims"
+  ) %>% 
+  mutate(
+    minute = as.numeric(str_remove(minute, "min")),
+    hour = ceiling(minute / 60) 
+  ) %>% 
+  group_by(education,sex,hour) %>% 
+  summarise(mean_mims=mean(mims), na_rm=TRUE)
+```
+```{r}
+ggplot(nhanes_timeline, aes(x = hour, y = mean_mims, color = sex)) +
+  geom_line(linewidth = 0.5) +
+  geom_smooth(se = FALSE, linewidth = .8,linetype = "dashed") + 
+  facet_wrap(~ education, nrow = 1) +
+  scale_x_continuous(breaks = seq(0, 24, 4)) +
+  labs(
+    title = "Average 24-Hour Activity Pattern by Education Level and Sex",
+    subtitle = "Based on 1-minute MIMS averages across all participants",
+    x = "Hour of Day",
+    y = "Mean MIMS Activity",
+    color = "Sex"
+  ) +
+  theme_minimal() 
+```
+```
+Across all education levels, physical activity rises sharply after waking, peaks in the late morning, and declines steadily into the evening.  
+Women show slightly higher mid-day activity than men, particularly among those with higher education.  
+Participants with more than high school education maintain elevated activity throughout the day, whereas those with less than high school education show lower overall activity and steeper afternoon declines.  
+Overall, daily patterns are consistent—early morning increase, midday plateau, and evening drop—but differ modestly in intensity by sex and education.  
