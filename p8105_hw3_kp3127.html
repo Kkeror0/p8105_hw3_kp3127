@@ -471,10 +471,85 @@ is fresh vegetables, with `r</p>
 <div id="problem-2" class="section level1">
 <h1>Problem 2</h1>
 <pre class="r"><code>zip_code=read.csv(&quot;./zillow_data/Zip Codes.csv&quot;) %&gt;% 
-  janitor::clean_names() 
+  janitor::clean_names() %&gt;% 
+  mutate(
+    zip=as.character(zip_code)
+  ) %&gt;% 
+  select(zip,county,neighborhood) %&gt;% 
+  arrange(zip)
 
 zori_nyc=read.csv(&quot;./zillow_data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv&quot;) %&gt;% 
-  janitor::clean_names()</code></pre>
+  janitor::clean_names() %&gt;% 
+  pivot_longer(
+    cols = 10:last_col(),
+    names_to = &quot;date&quot;,
+    values_to = &quot;rent_index&quot;
+  ) %&gt;%
+  mutate(
+    zip=as.character(region_name),
+    date=str_remove(date,&quot;^x&quot;), 
+    date=ymd(str_replace_all(date,&quot;_&quot;,&quot;-&quot;))
+  ) %&gt;% 
+  select(zip,date,rent_index) %&gt;% 
+  drop_na(rent_index) %&gt;%    
+  arrange(zip)</code></pre>
+<pre class="r"><code>zori_obs &lt;- zori_nyc %&gt;% 
+  group_by(zip) %&gt;% 
+  summarise(n_obs=n())
+
+n_full &lt;- zori_obs %&gt;%
+  filter(n_obs == 116) %&gt;%
+  nrow()
+
+n_sparse &lt;- zori_obs %&gt;%
+  filter(n_obs &lt; 10) %&gt;%
+  nrow()</code></pre>
+<p>There are 48 ZIP codes observed in all 116 months, and 26 ZIP codes
+observed fewer than 10 times.<br />
+Why are some ZIP codes are observed rarely and others observed in each
+month?<br />
+Some ZIP codes appear rarely in the Zillow dataset because Zillow only
+reports a rent index when there are enough active rental listings to
+produce a reliable median estimate.</p>
+<pre class="r"><code>zipmap_dups &lt;- zip_code %&gt;% count(zip) %&gt;% filter(n &gt; 1)
+zipmap_dups</code></pre>
+<pre><code>##     zip n
+## 1 10463 2
+## 2 11201 2</code></pre>
+<pre class="r"><code>zip_code &lt;- zip_code %&gt;%
+  mutate(
+    county = case_when(
+      zip == &quot;10463&quot; ~ &quot;Bronx&quot;, 
+      zip == &quot;11201&quot; ~ &quot;Kings&quot;, 
+      TRUE ~ county 
+    )
+  ) %&gt;%
+  distinct(zip, .keep_all = TRUE) 
+zori_final &lt;- zori_nyc %&gt;%
+  left_join(zip_code, by = &quot;zip&quot;) %&gt;%
+  arrange(zip, date)</code></pre>
+<pre class="r"><code>zori_table &lt;- zori_final %&gt;% 
+  mutate(year=year(date)) %&gt;% 
+  group_by(county,year) %&gt;% 
+  summarise(
+    mean_rent = mean(rent_index, na.rm = TRUE)
+  ) %&gt;% 
+  pivot_wider(
+    names_from = year,
+    values_from = mean_rent
+  )</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;county&#39;. You can override using the
+## `.groups` argument.</code></pre>
+<pre class="r"><code>zori_table</code></pre>
+<pre><code>## # A tibble: 5 × 11
+## # Groups:   county [5]
+##   county   `2015` `2016` `2017` `2018` `2019` `2020` `2021` `2022` `2023` `2024`
+##   &lt;chr&gt;     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+## 1 Bronx     1760.  1520.  1544.  1639.  1706.  1811.  1858.  2054.  2285.  2497.
+## 2 Kings     2493.  2520.  2546.  2547.  2631.  2555.  2550.  2868.  3015.  3126.
+## 3 New York  3022.  3039.  3134.  3184.  3310.  3107.  3137.  3778.  3933.  4078.
+## 4 Queens    2215.  2272.  2263.  2292.  2388.  2316.  2211.  2406.  2562.  2694.
+## 5 Richmond    NA     NA     NA     NA     NA   1978.  2045.  2147.  2333.  2536.</code></pre>
 </div>
 
 

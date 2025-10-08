@@ -93,17 +93,78 @@ mean_table
 # Problem 2 
 ```{r}
 zip_code=read.csv("./zillow_data/Zip Codes.csv") %>% 
-  janitor::clean_names() 
+  janitor::clean_names() %>% 
+  mutate(
+    zip=as.character(zip_code)
+  ) %>% 
+  select(zip,county,neighborhood) %>% 
+  arrange(zip)
 
 zori_nyc=read.csv("./zillow_data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  pivot_longer(
+    cols = 10:last_col(),
+    names_to = "date",
+    values_to = "rent_index"
+  ) %>%
+  mutate(
+    zip=as.character(region_name),
+    date=str_remove(date,"^x"), 
+    date=ymd(str_replace_all(date,"_","-"))
+  ) %>% 
+  select(zip,date,rent_index) %>% 
+  drop_na(rent_index) %>%    
+  arrange(zip)
 ```
 
+```{r}
+zori_obs <- zori_nyc %>% 
+  group_by(zip) %>% 
+  summarise(n_obs=n())
 
+n_full <- zori_obs %>%
+  filter(n_obs == 116) %>%
+  nrow()
 
+n_sparse <- zori_obs %>%
+  filter(n_obs < 10) %>%
+  nrow()
+```
+There are `r n_full` ZIP codes observed in all 116 months,
+and `r n_sparse` ZIP codes observed fewer than 10 times.  
+Why are some ZIP codes are observed rarely and others observed in each month?  
+Some ZIP codes appear rarely in the Zillow dataset because Zillow only reports a rent index when there are enough active rental listings to produce a reliable median estimate.
 
+```{r}
+zipmap_dups <- zip_code %>% count(zip) %>% filter(n > 1)
+zipmap_dups
+zip_code <- zip_code %>%
+  mutate(
+    county = case_when(
+      zip == "10463" ~ "Bronx", 
+      zip == "11201" ~ "Kings", 
+      TRUE ~ county 
+    )
+  ) %>%
+  distinct(zip, .keep_all = TRUE) 
+zori_final <- zori_nyc %>%
+  left_join(zip_code, by = "zip") %>%
+  arrange(zip, date)
+```
 
-
+```{r}
+zori_table <- zori_final %>% 
+  mutate(year=year(date)) %>% 
+  group_by(county,year) %>% 
+  summarise(
+    mean_rent = mean(rent_index, na.rm = TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from = year,
+    values_from = mean_rent
+  )
+zori_table
+```
 
 
 
