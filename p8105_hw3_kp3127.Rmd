@@ -91,6 +91,13 @@ mean_table
 ```
 
 # Problem 2 
+```{r}
+zip_code=read.csv("./zillow_data/Zip Codes.csv") %>% 
+  janitor::clean_names() 
+
+zori_nyc=read.csv("./zillow_data/Zip_zori_uc_sfrcondomfr_sm_month_NYC.csv") %>% 
+  janitor::clean_names()
+```
 
 
 
