@@ -165,10 +165,25 @@ zori_table <- zori_final %>%
   )
 zori_table
 ```
+Average rents rose across all boroughs from 2015 to 2024.  
+Manhattan remained the most expensive, with a brief dip around 2020 followed by strong growth after 2022.  
+Brooklyn and Queens showed steady increases, while the Bronx—though still cheapest—had the fastest relative rise.  
+Staten Island appears only after 2020, likely due to limited earlier data.  
 
+```{r}
+zori_zip_year <- zori_final %>% 
+  mutate(year=year(date)) %>%   
+  group_by(zip,year,county,neighborhood) %>% 
+  summarise(mean_rent = mean(rent_index, na.rm = TRUE))  
+```
+```{r}
+ggplot(zori_zip_year,aes(x=zip,y=mean_rent))+
+  geom_point(aes(color=year))
+```
 
+# TBC
 
-
+# Problem 3
 
 
 
