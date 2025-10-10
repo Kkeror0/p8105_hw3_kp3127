@@ -5,6 +5,7 @@ date: "2025-10-07"
 ---
 ```{r setup, echo=FALSE}
 library(tidyverse)
+library(patchwork)
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -178,16 +179,90 @@ Staten Island appears only after 2020, likely due to limited earlier data.
 
 ```{r}
 zori_zip_year <- zori_final %>% 
-  mutate(year=year(date)) %>%   
-  group_by(zip,year,county,neighborhood) %>% 
-  summarise(mean_rent = mean(rent_index, na.rm = TRUE))  
+  mutate(
+        year=year(date),
+    borough = case_match(
+      county,
+      "Bronx" ~ "Bronx",
+      "Kings" ~ "Brooklyn",
+      "New York" ~ "Manhattan",
+      "Queens" ~ "Queens",
+      "Richmond" ~ "Staten Island",
+      .default = NA_character_    
+         ) 
+  ) %>% 
+  group_by(borough,year) %>% 
+  summarise(mean_rent = mean(rent_index, na.rm = TRUE))
 ```
 ```{r}
-ggplot(zori_zip_year,aes(x=zip,y=mean_rent))+
-  geom_point(aes(color=year))
+zori_line <- 
+  ggplot(zori_zip_year, aes(x = year, y = mean_rent, color = borough)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 1.8) +
+  labs(
+    title = "NYC Rental Prices within ZIP Codes for All Available Years",
+    x = "Year",
+    y = "Average Rental Price ($)",
+    color = "Borough"
+  ) +
+  scale_x_continuous(
+    breaks = seq(min(zori_zip_year$year, na.rm = TRUE),
+                 max(zori_zip_year$year, na.rm = TRUE),
+                 by = 1)
+  ) +
+  theme_minimal()
+zori_line
 ```
+Rental prices increased steadily across all five NYC boroughs between 2015 and 2024, with a noticeable dip around 2020–2021 followed by a sharp post-pandemic rebound.  
+Manhattan remains the most expensive borough, with average rents rising from just over $3,000 in 2015 to above $4,000 by 2024.  
+Brooklyn and Queens show consistent growth and now exceed $3,000 and $2,600 respectively.  
+The Bronx is still the most affordable area but experienced the fastest proportional increase, rising from roughly $1,700 to about $2,500.  
+Staten Island appears in the dataset later (around 2020) and follows a similar upward trend.  
 
-# TBC
+```{r}
+zori_23 <- zori_final %>% 
+  mutate(
+        year=year(date),
+    borough = case_match(
+      county,
+      "Bronx" ~ "Bronx",
+      "Kings" ~ "Brooklyn",
+      "New York" ~ "Manhattan",
+      "Queens" ~ "Queens",
+      "Richmond" ~ "Staten Island",
+      .default = NA_character_    
+         ) 
+  ) %>%   
+  filter(year == 2023, !is.na(borough)) %>%
+  group_by(borough, zip) %>%
+  summarise(mean_rent23 = mean(rent_index, na.rm = TRUE))  
+```
+```{r}
+zori_box <- 
+ggplot(zori_23, aes(x = borough, y = mean_rent23, fill = borough)) +
+  geom_boxplot(alpha = 0.5) +
+  labs(
+    title = "Distribution of ZIP-Code-Level Rental Prices by Borough (2023)",
+    x = "Borough",
+    y = "Average Rental Price ($)"
+  ) +
+  theme_minimal()
+zori_box
+```
+  
+Median rental prices in 2023 differ markedly across boroughs, showing NYC’s persistent housing cost gradient.  
+Manhattan has the highest median rent (around $4,000 per month) and the widest spread, reflecting both luxury and moderate ZIP codes.  
+Brooklyn follows, with a lower median (~$3,000) but large variation, suggesting diverse neighborhoods ranging from affordable to high-end.  
+Queens and Staten Island have similar median rents near $2,500, with tighter distributions—fewer extremely high-rent areas.  
+The Bronx remains the most affordable borough, centered around $2,200, though a few higher-rent ZIPs push the upper whisker.  
+
+combine and save
+```{r}
+combined_plot <- zori_line / zori_box +
+  plot_annotation(title = "NYC Rental Price Trends and 2023 Distributions")
+
+ggsave("nyc_rental_combined.png", combined_plot, width = 12, height = 8, dpi = 300)
+```
 
 # Problem 3
 ```{r}
